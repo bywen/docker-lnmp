@@ -5,9 +5,11 @@ services:
 
   nginx:
       image: nginx:alpine
+      container_name: nginx
       ports:
         - "${HTTP_PORT}:80"
         - "${HTTPS_PORT}:443"
+        - "8080:8080"
         - "8888:8888"
         - "7777:7777"
       volumes:
@@ -19,6 +21,29 @@ services:
       privileged: true
       networks:
         - net-php
+        - net-php7.3
+
+
+  ### PHP 7.3 #########################################
+
+  php7.3:
+      build:
+        context: ./build/php7.3
+        args:
+          TIME_ZONE: ${GLOBAL_TIME_ZONE}
+          CHANGE_SOURCE: ${GLOBAL_CHANGE_SOURCE}
+      container_name: php7.3
+      volumes:
+        - ${PROJECT_FOLDER}:/etc/nginx/html:rw
+        - ./work/components/php/config7.3/php.ini:/usr/local/etc/php/php.ini:ro
+        - ./work/components/php/config7.3/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+        - ./work/components/php/log7.3:/var/log:rw
+      restart: always
+      privileged: true
+      networks:
+        - net-php7.3
+        - net-mysql
+        - net-redis
 
   ### PHP container #########################################
 
@@ -28,10 +53,12 @@ services:
         args:
           TIME_ZONE: ${GLOBAL_TIME_ZONE}
           CHANGE_SOURCE: ${GLOBAL_CHANGE_SOURCE}
+      container_name: php7.4
       volumes:
         - ${PROJECT_FOLDER}:/etc/nginx/html:rw
         - ./work/components/php/config/php.ini:/usr/local/etc/php/php.ini:ro
         - ./work/components/php/config/php-fpm.conf:/usr/local/etc/php-fpm.d/www.conf:rw
+        - ./work/components/php/config/supervisord.conf:/etc/supervisor/supervisord.conf:rw  
         - ./work/components/php/log:/var/log:rw
       restart: always
       privileged: true
@@ -44,6 +71,7 @@ services:
 
   mysql:
       image: mysql:5.7
+      container_name: msyql
       ports:
         - "${MYSQL_PORT}:3306"
       volumes:
@@ -61,6 +89,7 @@ services:
 
   redis:
       image: redis:latest
+      container_name: redis
       ports:
         - "${REDIS_PORT}:6379"
       volumes:
@@ -71,26 +100,9 @@ services:
       networks:
         - net-redis
 
-  ### Tools container #########################################
-
-  tools:
-      build:
-        context: ./build/tools
-        args:
-          TIME_ZONE: ${GLOBAL_TIME_ZONE}
-          CHANGE_SOURCE: ${GLOBAL_CHANGE_SOURCE}
-      volumes:
-        - ./work/components/tools/start.sh:/home/start.sh:rw
-        - ./work/components/tools/backup:/backup:rw
-        - ./work/components/tools/cron.d:/etc/cron.d:rw
-      restart: always
-      privileged: true
-      networks:
-        - net-php
-        - net-mysql
-        - net-redis
 
 networks:
+  net-php7.3:
   net-php:
   net-mysql:
   net-redis:
