@@ -9,6 +9,8 @@ ENV TIME_ZONE=${TIME_ZONE} LC_ALL=C.UTF-8
 RUN apt-get update && apt-get install -y --no-install-recommends \
   autoconf \
   build-essential \
+  libcurl4-openssl-dev \
+  build-essential \
   apt-utils \
   zlib1g-dev \
   libzip-dev \
@@ -34,7 +36,9 @@ RUN docker-php-ext-configure zip
 
 RUN docker-php-ext-configure bcmath
 
-RUN docker-php-ext-install gd intl pdo_mysql pdo_pgsql mysqli zip bcmath
+RUN docker-php-ext-configure pcntl
+
+RUN docker-php-ext-install pcntl gd intl pdo_mysql pdo_pgsql mysqli zip bcmath
 
 RUN pecl install /home/resource/redis-4.2.0.tgz; \
     echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
