@@ -1,0 +1,25 @@
+version: '3'
+networks:
+  default:
+    external: false
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+
+services:
+  jenkins:
+    image: jenkinsci/blueocean
+    container_name: jk
+    ports:
+      - "7788:8080"
+      - "50000:50000"
+    volumes:
+      - /data/jenkins:/var/jenkins_home:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    privileged: true
+    networks:
+      default:
+        ipv4_address: 172.19.0.2
+   # network_mode: "host"
